@@ -40,3 +40,44 @@ class PersonaDescuidada extends Persona {
         this.frecuenciaTocarRostro = frecuenciaTocarRostro;
         this.ignoraSintomas = ignoraSintomas;
     }
+// CONCEPTO: Polimorfismo (@Override)
+    @Override
+    public void tocarseRostro() {
+        if (virusEnManos) {
+            infectar();
+        }
+    }
+
+    @Override
+    public void mostrarInformacion() {
+        System.out.print("[DESCUIDADA] ");
+        mostrarDatosComunes();
+        System.out.println(" | Frecuencia rostro/hora: " + frecuenciaTocarRostro
+                + " | Ignora síntomas: " + (ignoraSintomas ? "Sí" : "No"));
+    }
+}
+
+// Clase que representa la superficie u objeto contaminado
+class Objeto {
+    private String nombre;
+    private boolean contaminado; // CONCEPTO: dato primitivo boolean
+
+    public Objeto(String nombre) {
+        this.nombre = nombre;
+        this.contaminado = false;
+    }
+
+    public void contaminar(Persona portador) {
+        if (portador.isInfectada()) {
+            this.contaminado = true;
+        }
+    }
+
+    public void limpiar() {
+        this.contaminado = false;
+    }
+
+    public String getNombre() { return nombre; }
+    public boolean isContaminado() { return contaminado; }
+}
+
