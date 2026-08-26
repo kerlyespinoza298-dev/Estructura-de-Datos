@@ -1,0 +1,42 @@
+// CONCEPTO: Herencia (PersonaCuidadosa extends Persona)
+class PersonaCuidadosa extends Persona {
+    private boolean usaMascarilla;
+    private boolean usaAlcohol;
+
+    public PersonaCuidadosa(String nombre, boolean infectada, boolean usaMascarilla, boolean usaAlcohol) {
+        super(nombre, infectada);
+        this.usaMascarilla = usaMascarilla;
+        this.usaAlcohol = usaAlcohol;
+    }
+
+    // CONCEPTO: Polimorfismo (@Override)
+    @Override
+    public void tocarseRostro() {
+        if (virusEnManos) {
+            if (usaAlcohol) {
+                virusEnManos = false; // se desinfecta antes de tocarse el rostro
+            } else {
+                infectar();
+            }
+        }
+    }
+
+    @Override
+    public void mostrarInformacion() {
+        System.out.print("[CUIDADOSA]  ");
+        mostrarDatosComunes();
+        System.out.println(" | Mascarilla: " + (usaMascarilla ? "Sí" : "No")
+                + " | Alcohol: " + (usaAlcohol ? "Sí" : "No"));
+    }
+}
+
+// CONCEPTO: Herencia (PersonaDescuidada extends Persona)
+class PersonaDescuidada extends Persona {
+    private int frecuenciaTocarRostro;
+    private boolean ignoraSintomas;
+
+    public PersonaDescuidada(String nombre, boolean infectada, int frecuenciaTocarRostro, boolean ignoraSintomas) {
+        super(nombre, infectada);
+        this.frecuenciaTocarRostro = frecuenciaTocarRostro;
+        this.ignoraSintomas = ignoraSintomas;
+    }
