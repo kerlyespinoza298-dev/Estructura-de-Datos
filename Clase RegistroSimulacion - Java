@@ -1,0 +1,73 @@
+// ============================================================
+// CONCEPTO: TDA RegistroSimulacion (estructura estatica)
+// ============================================================
+class RegistroSimulacion {
+    private static final int CAPACIDAD = 10;
+    private final Persona[] personas = new Persona[CAPACIDAD]; // CONCEPTO: arreglo estatico
+    private int cantidad = 0;
+
+    public boolean estaLleno() {
+        return cantidad >= CAPACIDAD;
+    }
+
+    public boolean existeNombre(String nombre) {
+        for (int i = 0; i < cantidad; i++) {
+            if (personas[i].getNombre().equalsIgnoreCase(nombre)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public boolean registrar(Persona nuevaPersona) {
+        if (nuevaPersona == null || estaLleno() || existeNombre(nuevaPersona.getNombre())) {
+            return false;
+        }
+        personas[cantidad] = nuevaPersona;
+        cantidad++;
+        return true;
+    }
+
+    public Persona buscarPorNombre(String nombre) {
+        for (int i = 0; i < cantidad; i++) {
+            if (personas[i].getNombre().equalsIgnoreCase(nombre)) {
+                return personas[i];
+            }
+        }
+        return null;
+    }
+
+    public int getCantidad() { return cantidad; }
+
+    public int contarInfectados() {
+        int total = 0;
+        for (int i = 0; i < cantidad; i++) {
+            if (personas[i].isInfectada()) total++;
+        }
+        return total;
+    }
+
+    // CONCEPTO: Polimorfismo en tiempo de ejecucion
+    public void simularContactoConRostro() {
+        if (cantidad == 0) {
+            System.out.println("No hay personas registradas.");
+            return;
+        }
+        for (int i = 0; i < cantidad; i++) {
+            personas[i].tocarseRostro();
+        }
+        System.out.println("Simulación completada: cada persona decidió tocarse el rostro.");
+    }
+
+    public void mostrarEstado() {
+        if (cantidad == 0) {
+            System.out.println("No hay personas registradas.");
+            return;
+        }
+        System.out.println("\n--- ESTADO DEL REGISTRO (" + cantidad + "/" + CAPACIDAD + ") ---");
+        for (int i = 0; i < cantidad; i++) {
+            personas[i].mostrarInformacion();
+        }
+        System.out.println("Total de infectados: " + contarInfectados());
+    }
+}
