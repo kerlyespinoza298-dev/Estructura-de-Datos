@@ -358,7 +358,7 @@ public class Main {
                 System.out.print(mensaje);
                 return Integer.parseInt(scanner.nextLine().trim());
             } catch (NumberFormatException e) {
-                System.out.println("❌ Entrada no válida. Ingrese un entero.");
+                System.out.println("Entrada no válida. Ingrese un entero.");
             }
         }
     }
