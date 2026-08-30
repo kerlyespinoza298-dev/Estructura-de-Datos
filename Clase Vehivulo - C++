@@ -1,0 +1,31 @@
+#include <iostream>
+#include <string>
+
+using namespace std;
+
+// ============================================================
+// CONCEPTO: CLASE BASE Y HERENCIA
+// Se define una clase base 'Vehiculo' de la cual heredaran otras clases.
+// ============================================================
+class Vehiculo {
+protected:
+    // CONCEPTO: TIPOS DE DATOS PRIMITIVOS
+    // 1. int (entero) para el anio de fabricacion
+    // 2. double (decimal) para el precio
+    string marca;
+    int anio;       // Tipo primitivo 1
+    double precio;  // Tipo primitivo 2
+
+public:
+    // CONCEPTO: INSTANCIACIÓN / CONSTRUCTOR
+    Vehiculo(string _marca, int _anio, double _precio)
+        : marca(_marca), anio(_anio), precio(_precio) {}
+
+    virtual ~Vehiculo() {}
+
+    // CONCEPTO: POLIMORFISMO
+    // Uso de un metodo virtual que sera sobrescrito por las clases derivadas.
+    virtual void mostrarInformacion() const {
+        cout << "Marca: " << marca << " | Anio: " << anio << " | Precio: $" << precio;
+    }
+};
