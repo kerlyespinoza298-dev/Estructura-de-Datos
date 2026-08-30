@@ -8,7 +8,7 @@
 using namespace std;
 
 // ============================================================
-// FUNCIONES AUXILIARES Y CONTROLES STRICTOS DE VALIDACIÓN
+// VALIDACIONES DE ENTRADA
 // ============================================================
 
 bool esNumero(const string& str) {
@@ -19,16 +19,12 @@ bool esNumero(const string& str) {
     return true;
 }
 
-// Control 1: Cédula Ecuatoriana (Algoritmo Módulo 10)
 bool validarCedulaEcuador(const string& cedula) {
     if (cedula.length() != 10 || !esNumero(cedula)) return false;
-
     int provincia = stoi(cedula.substr(0, 2));
     if ((provincia < 1 || provincia > 24) && provincia != 30) return false;
-
     int tercerDigito = cedula[2] - '0';
     if (tercerDigito < 0 || tercerDigito > 5) return false;
-
     int suma = 0;
     for (int i = 0; i < 9; i++) {
         int d = cedula[i] - '0';
@@ -38,7 +34,6 @@ bool validarCedulaEcuador(const string& cedula) {
         }
         suma += d;
     }
-
     int digitoVerificador = (suma % 10 == 0) ? 0 : (10 - (suma % 10));
     return digitoVerificador == (cedula[9] - '0');
 }
@@ -47,14 +42,11 @@ bool esBisiesto(int anio) {
     return (anio % 4 == 0 && anio % 100 != 0) || (anio % 400 == 0);
 }
 
-// Control 2: Fecha de Nacimiento estricta (DD/MM/AAAA)
 bool validarFechaNacimiento(const string& fechaStr, int& diaOut, int& mesOut, int& anioOut) {
     if (fechaStr.length() != 10) return false;
-
     int dia, mes, anio;
     char sep1, sep2;
     istringstream iss(fechaStr);
-
     if (!(iss >> dia >> sep1 >> mes >> sep2 >> anio) || !iss.eof()) return false;
     if (sep1 != '/' || sep2 != '/') return false;
 
@@ -71,25 +63,19 @@ bool validarFechaNacimiento(const string& fechaStr, int& diaOut, int& mesOut, in
     if (mes == 2 && esBisiesto(anio)) diasPorMes[2] = 29;
 
     if (dia < 1 || dia > diasPorMes[mes]) return false;
-
     if (anio == anioAct) {
         if (mes > mesAct) return false;
         if (mes == mesAct && dia > diaAct) return false;
     }
 
-    diaOut = dia;
-    mesOut = mes;
-    anioOut = anio;
+    diaOut = dia; mesOut = mes; anioOut = anio;
     return true;
 }
 
-// Control 3: Nombres / Apellidos (Solo letras, mínimo 2 caracteres por palabra)
 bool validarTextoNombres(const string& texto) {
     if (texto.empty()) return false;
-
     int letrasSeguidas = 0;
     bool tieneLetras = false;
-
     for (char c : texto) {
         if (isalpha(c)) {
             letrasSeguidas++;
@@ -98,16 +84,15 @@ bool validarTextoNombres(const string& texto) {
             if (letrasSeguidas > 0 && letrasSeguidas < 2) return false;
             letrasSeguidas = 0;
         } else {
-            return false; // Rechaza dígitos y caracteres especiales
+            return false;
         }
     }
-
     if (letrasSeguidas > 0 && letrasSeguidas < 2) return false;
     return tieneLetras;
 }
 
 // ============================================================
-// TDA ESTUDIANTE
+// CLASE ESTUDIANTE (REQUERIMIENTO 1 Y 2)
 // ============================================================
 
 class Estudiante {
@@ -121,8 +106,7 @@ private:
     int numNotas;
 
 public:
-    Estudiante()
-        : cedula(""), nombres(""), apellidos(""), fechaNacimiento(""), numNotas(0) {}
+    Estudiante() : cedula(""), nombres(""), apellidos(""), fechaNacimiento(""), numNotas(0) {}
 
     Estudiante(string cedula, string nombres, string apellidos, string fechaNacimiento)
         : cedula(cedula), nombres(nombres), apellidos(apellidos), fechaNacimiento(fechaNacimiento), numNotas(0) {}
@@ -134,25 +118,17 @@ public:
     int getNumNotas() const { return numNotas; }
     int getMaxNotas() const { return MAX_NOTAS; }
 
-    void setNombres(const string& nombres) { this->nombres = nombres; }
-    void setApellidos(const string& apellidos) { this->apellidos = apellidos; }
-    void setFechaNacimiento(const string& fechaNacimiento) { this->fechaNacimiento = fechaNacimiento; }
+    void setNombres(const string& n) { nombres = n; }
+    void setApellidos(const string& a) { apellidos = a; }
+    void setFechaNacimiento(const string& f) { fechaNacimiento = f; }
 
     int calcularEdad() const {
         int dia, mes, anio;
         if (!validarFechaNacimiento(fechaNacimiento, dia, mes, anio)) return -1;
-
-        time_t tiempoActual = time(nullptr);
-        tm* fechaActual = localtime(&tiempoActual);
-
-        int anioActual = fechaActual->tm_year + 1900;
-        int mesActual = fechaActual->tm_mon + 1;
-        int diaActual = fechaActual->tm_mday;
-
-        int edad = anioActual - anio;
-        if (mesActual < mes || (mesActual == mes && diaActual < dia)) {
-            edad--;
-        }
+        time_t t = time(nullptr);
+        tm* actual = localtime(&t);
+        int edad = (actual->tm_year + 1900) - anio;
+        if ((actual->tm_mon + 1) < mes || ((actual->tm_mon + 1) == mes && actual->tm_mday < dia)) edad--;
         return edad;
     }
 
@@ -162,22 +138,17 @@ public:
         return true;
     }
 
-    double getNota(int indice) const {
-        if (indice < 0 || indice >= numNotas) return -1.0;
-        return notas[indice];
-    }
+    double getNota(int i) const { return (i >= 0 && i < numNotas) ? notas[i] : -1.0; }
 
-    bool modificarNota(int indice, double nota) {
-        if (indice < 0 || indice >= numNotas) return false;
-        notas[indice] = nota;
+    bool modificarNota(int i, double nota) {
+        if (i < 0 || i >= numNotas) return false;
+        notas[i] = nota;
         return true;
     }
 
-    bool eliminarNota(int indice) {
-        if (indice < 0 || indice >= numNotas) return false;
-        for (int i = indice; i < numNotas - 1; i++) {
-            notas[i] = notas[i + 1];
-        }
+    bool eliminarNota(int i) {
+        if (i < 0 || i >= numNotas) return false;
+        for (int j = i; j < numNotas - 1; j++) notas[j] = notas[j + 1];
         numNotas--;
         return true;
     }
@@ -191,10 +162,7 @@ public:
 
     string toString() const {
         stringstream ss;
-        ss << "Cedula: " << cedula
-           << " | Nombres: " << nombres
-           << " | Apellidos: " << apellidos
-           << " | F.Nac: " << fechaNacimiento;
+        ss << "Cedula: " << cedula << " | Nombres: " << nombres << " | Apellidos: " << apellidos << " | F.Nac: " << fechaNacimiento;
         return ss.str();
     }
 
@@ -202,16 +170,14 @@ public:
         if (numNotas == 0) return "[ Sin calificaciones ]";
         stringstream ss;
         ss << fixed << setprecision(1);
-        for (int i = 0; i < numNotas; i++) {
-            ss << "[" << notas[i] << "] ";
-        }
+        for (int i = 0; i < numNotas; i++) ss << "[" << notas[i] << "] ";
         ss << "| Promedio: " << fixed << setprecision(2) << calcularPromedio();
         return ss.str();
     }
 };
 
 // ============================================================
-// TDA GESTOR DE ESTUDIANTES
+// CLASE GESTOR DE ESTUDIANTES (MÃ‰TODO BUSCAR EXPLICITO)
 // ============================================================
 
 class GestorEstudiantes {
@@ -228,7 +194,8 @@ public:
     int getCantidad() const { return cantidad; }
     int getCapacidad() const { return CAPACIDAD; }
 
-    Estudiante* buscarPorCedula(const string& cedula) {
+    // Requerimiento 2: MÃ©todo buscar() explicito por cÃ©dula
+    Estudiante* buscar(const string& cedula) {
         for (int i = 0; i < cantidad; i++) {
             if (estudiantes[i].getCedula() == cedula) return &estudiantes[i];
         }
@@ -241,24 +208,22 @@ public:
     }
 
     bool registrar(const Estudiante& nuevo) {
-        if (estaLleno() || buscarPorCedula(nuevo.getCedula()) != nullptr) return false;
+        if (estaLleno() || buscar(nuevo.getCedula()) != nullptr) return false;
         estudiantes[cantidad++] = nuevo;
         return true;
     }
 
-    bool modificar(int indice, const string& nombres, const string& apellidos, const string& fechaNacimiento) {
-        if (indice < 0 || indice >= cantidad) return false;
-        estudiantes[indice].setNombres(nombres);
-        estudiantes[indice].setApellidos(apellidos);
-        estudiantes[indice].setFechaNacimiento(fechaNacimiento);
+    bool modificar(int i, const string& n, const string& a, const string& f) {
+        if (i < 0 || i >= cantidad) return false;
+        estudiantes[i].setNombres(n);
+        estudiantes[i].setApellidos(a);
+        estudiantes[i].setFechaNacimiento(f);
         return true;
     }
 
-    bool eliminar(int indice) {
-        if (indice < 0 || indice >= cantidad) return false;
-        for (int i = indice; i < cantidad - 1; i++) {
-            estudiantes[i] = estudiantes[i + 1];
-        }
+    bool eliminar(int i) {
+        if (i < 0 || i >= cantidad) return false;
+        for (int j = i; j < cantidad - 1; j++) estudiantes[j] = estudiantes[j + 1];
         cantidad--;
         return true;
     }
@@ -272,25 +237,26 @@ public:
 
     double calcularPromedioGeneral() const {
         double sumaPromedios = 0.0;
-        int estudiantesConNotas = 0;
+        int cont = 0;
         for (int i = 0; i < cantidad; i++) {
             if (estudiantes[i].getNumNotas() > 0) {
                 sumaPromedios += estudiantes[i].calcularPromedio();
-                estudiantesConNotas++;
+                cont++;
             }
         }
-        if (estudiantesConNotas == 0) return 0.0;
-        return sumaPromedios / estudiantesConNotas;
+        return (cont == 0) ? 0.0 : (sumaPromedios / cont);
     }
 
     void mostrarTabla() const {
-        if (estaVacio()) return;
-
-        cout << "\n==============================================\n"
-             << "LISTADO DE ESTUDIANTES (" << cantidad << "/" << CAPACIDAD << ")\n"
-             << "==============================================\n";
-        for (int i = 0; i < cantidad; i++) {
-            cout << (i + 1) << ". " << estudiantes[i].toString() << endl;
+        cout << "\n==============================================\n";
+        if (estaVacio()) {
+            cout << "LISTADO DE ESTUDIANTES: (No hay estudiantes registrados)\n";
+        } else {
+            cout << "LISTADO DE ESTUDIANTES (" << cantidad << "/" << CAPACIDAD << ")\n";
+            cout << "==============================================\n";
+            for (int i = 0; i < cantidad; i++) {
+                cout << (i + 1) << ". " << estudiantes[i].toString() << endl;
+            }
         }
         cout << "==============================================\n";
     }
@@ -299,7 +265,7 @@ public:
 GestorEstudiantes gestor;
 
 // ============================================================
-// FUNCIONES DE ENTRADA VALIDADAS
+// FUNCIONES DE LECTURA VALIDADAS
 // ============================================================
 
 int leerEntero(const string& mensaje) {
@@ -308,34 +274,33 @@ int leerEntero(const string& mensaje) {
         string linea;
         getline(cin, linea);
         try {
-            size_t posicion;
-            int valor = stoi(linea, &posicion);
-            if (posicion == linea.size()) return valor;
+            size_t pos;
+            int v = stoi(linea, &pos);
+            if (pos == linea.size()) return v;
         } catch (...) {}
         cout << "Entrada no valida. Ingrese un entero valido.\n";
     }
 }
 
-double leerDouble(const string& mensaje, double minimo, double maximo) {
+double leerDouble(const string& mensaje, double min, double max) {
     while (true) {
         cout << mensaje;
         string linea;
         getline(cin, linea);
         try {
-            size_t posicion;
-            double valor = stod(linea, &posicion);
-            if (posicion == linea.size() && valor >= minimo && valor <= maximo) return valor;
+            size_t pos;
+            double v = stod(linea, &pos);
+            if (pos == linea.size() && v >= min && v <= max) return v;
         } catch (...) {}
-        cout << "Entrada no valida. Ingrese un valor entre " << minimo << " y " << maximo << ".\n";
+        cout << "Entrada no valida. Ingrese un valor entre " << min << " y " << max << ".\n";
     }
 }
 
 string leerCedulaValida(const string& mensaje) {
     while (true) {
         cout << mensaje;
-        string cedula;
-        getline(cin, cedula);
-        if (validarCedulaEcuador(cedula)) return cedula;
+        string c; getline(cin, c);
+        if (validarCedulaEcuador(c)) return c;
         cout << "Error: Cedula invalida (debe contener 10 digitos validos de Ecuador).\n";
     }
 }
@@ -343,9 +308,8 @@ string leerCedulaValida(const string& mensaje) {
 string leerTextoValido(const string& mensaje) {
     while (true) {
         cout << mensaje;
-        string texto;
-        getline(cin, texto);
-        if (validarTextoNombres(texto)) return texto;
+        string t; getline(cin, t);
+        if (validarTextoNombres(t)) return t;
         cout << "Error: Debe ingresar texto valido (solo letras, min. 2 caracteres por palabra).\n";
     }
 }
@@ -353,21 +317,19 @@ string leerTextoValido(const string& mensaje) {
 string leerFechaValida(const string& mensaje) {
     while (true) {
         cout << mensaje;
-        string fecha;
-        getline(cin, fecha);
+        string f; getline(cin, f);
         int d, m, a;
-        if (validarFechaNacimiento(fecha, d, m, a)) return fecha;
-        cout << "Error: Fecha invalida. Use el formato estricto DD/MM/AAAA (ej. 15/08/2002).\n";
+        if (validarFechaNacimiento(f, d, m, a)) return f;
+        cout << "Error: Fecha invalida. Use el formato estricto DD/MM/AAAA.\n";
     }
 }
 
 string leerTextoOpcionalValido(const string& mensaje, const string& actual) {
     while (true) {
         cout << mensaje;
-        string texto;
-        getline(cin, texto);
-        if (texto.empty()) return actual;
-        if (validarTextoNombres(texto)) return texto;
+        string t; getline(cin, t);
+        if (t.empty()) return actual;
+        if (validarTextoNombres(t)) return t;
         cout << "Error: Texto invalido. Solo se permiten letras.\n";
     }
 }
@@ -375,41 +337,39 @@ string leerTextoOpcionalValido(const string& mensaje, const string& actual) {
 string leerFechaOpcionalValida(const string& mensaje, const string& actual) {
     while (true) {
         cout << mensaje;
-        string fecha;
-        getline(cin, fecha);
-        if (fecha.empty()) return actual;
+        string f; getline(cin, f);
+        if (f.empty()) return actual;
         int d, m, a;
-        if (validarFechaNacimiento(fecha, d, m, a)) return fecha;
+        if (validarFechaNacimiento(f, d, m, a)) return f;
         cout << "Error: Fecha invalida. Use formato DD/MM/AAAA.\n";
     }
 }
 
 bool solicitarConfirmacion(const string& mensaje) {
     cout << mensaje;
-    string respuesta;
-    getline(cin, respuesta);
-    for (char& c : respuesta) c = tolower(c);
-    return respuesta == "s" || respuesta == "si";
+    string r; getline(cin, r);
+    for (char& c : r) c = tolower(c);
+    return r == "s" || r == "si";
 }
 
 // ============================================================
-// LÓGICA DE SUBMENÚS
+// OPCIÃ“N 1: SUBMENÃš ESTUDIANTES
 // ============================================================
 
 void ejecutarIngresoEstudiantes() {
     bool continuar = true;
     while (continuar) {
         if (gestor.estaLleno()) {
-            cout << "\nError: Cupo maximo alcanzado (" << gestor.getCapacidad() << ").\n";
+            cout << "\nNo se permite insertar: Cupo maximo alcanzado (" << gestor.getCapacidad() << ").\n";
             break;
         }
 
         cout << "\n--- INGRESAR ESTUDIANTE ---\n";
         string cedula = leerCedulaValida("Cedula: ");
 
-        if (gestor.buscarPorCedula(cedula) != nullptr) {
+        if (gestor.buscar(cedula) != nullptr) {
             cout << "Error: Ya existe un estudiante registrado con esa cedula.\n";
-            continuar = solicitarConfirmacion("¿Desea intentar con otra cedula? (s/N): ");
+            continuar = solicitarConfirmacion("Â¿Desea intentar con otra cedula? (s/N): ");
             continue;
         }
 
@@ -418,91 +378,77 @@ void ejecutarIngresoEstudiantes() {
         string fechaNacimiento = leerFechaValida("Fecha de nacimiento (DD/MM/AAAA): ");
 
         Estudiante nuevo(cedula, nombres, apellidos, fechaNacimiento);
-
         if (gestor.registrar(nuevo)) {
             cout << "\nEstudiante registrado exitosamente.\n";
             cout << "Total: " << gestor.getCantidad() << "/" << gestor.getCapacidad() << endl;
         }
 
         if (gestor.estaLleno()) break;
-
-        continuar = solicitarConfirmacion("¿Desea ingresar otro estudiante? (s/N): ");
+        continuar = solicitarConfirmacion("Â¿Desea ingresar otro estudiante? (s/N): ");
     }
 }
 
 void ejecutarModificarEstudiante() {
     if (gestor.estaVacio()) {
-        cout << "\nNo hay estudiantes registrados para modificar.\n";
+        cout << "\nNo hay estudiantes registrados. No es posible modificar.\n";
         return;
     }
 
     bool continuar = true;
     while (continuar) {
         gestor.mostrarTabla();
-        int indice = leerEntero("Numero de autonumerico del estudiante a modificar: ") - 1;
+        int indice = leerEntero("Indique el autonumerico del estudiante a modificar: ") - 1;
 
-        Estudiante* estudiante = gestor.buscarPorIndice(indice);
-
-        if (estudiante == nullptr) {
+        Estudiante* est = gestor.buscarPorIndice(indice);
+        if (est == nullptr) {
             cout << "Error: Registro no encontrado.\n";
         } else {
-            cout << "\nDatos actuales:\n" << estudiante->toString() << endl;
+            cout << "\nDatos actuales:\n" << est->toString() << endl;
+            string n = leerTextoOpcionalValido("Nuevos nombres (Enter para mantener): ", est->getNombres());
+            string a = leerTextoOpcionalValido("Nuevos apellidos (Enter para mantener): ", est->getApellidos());
+            string f = leerFechaOpcionalValida("Nueva fecha de nacimiento (Enter para mantener): ", est->getFechaNacimiento());
 
-            string nombres = leerTextoOpcionalValido("Nuevos nombres (Enter para mantener): ", estudiante->getNombres());
-            string apellidos = leerTextoOpcionalValido("Nuevos apellidos (Enter para mantener): ", estudiante->getApellidos());
-            string fecha = leerFechaOpcionalValida("Nueva fecha de nacimiento (Enter para mantener): ", estudiante->getFechaNacimiento());
-
-            gestor.modificar(indice, nombres, apellidos, fecha);
+            gestor.modificar(indice, n, a, f);
             cout << "Estudiante modificado exitosamente.\n";
         }
-
-        continuar = solicitarConfirmacion("¿Desea modificar otro estudiante? (s/N): ");
+        continuar = solicitarConfirmacion("Â¿Desea modificar otro estudiante? (s/N): ");
     }
 }
 
 void ejecutarEliminarEstudiante() {
     if (gestor.estaVacio()) {
-        cout << "\nNo hay estudiantes registrados para eliminar.\n";
+        cout << "\nNo hay estudiantes registrados. No se permite eliminar.\n";
         return;
     }
 
     bool continuar = true;
     while (continuar) {
         gestor.mostrarTabla();
-        int indice = leerEntero("Numero de autonumerico a eliminar: ") - 1;
+        int indice = leerEntero("Indique el autonumerico del estudiante a eliminar: ") - 1;
 
-        Estudiante* estudiante = gestor.buscarPorIndice(indice);
-
-        if (estudiante == nullptr) {
+        Estudiante* est = gestor.buscarPorIndice(indice);
+        if (est == nullptr) {
             cout << "Error: Registro no encontrado.\n";
         } else {
-            cout << "\nRegistro seleccionado:\n" << estudiante->toString() << endl;
-
-            if (solicitarConfirmacion("¿Confirmar eliminacion? (s/N): ")) {
+            cout << "\nRegistro seleccionado:\n" << est->toString() << endl;
+            if (solicitarConfirmacion("Â¿Confirmar eliminacion? (s/N): ")) {
                 gestor.eliminar(indice);
-                cout << "Estudiante eliminado.\n";
+                cout << "Estudiante eliminado exitosamente.\n";
             } else {
                 cout << "Operacion cancelada.\n";
             }
         }
 
         if (gestor.estaVacio()) break;
-        continuar = solicitarConfirmacion("¿Desea eliminar otro estudiante? (s/N): ");
+        continuar = solicitarConfirmacion("Â¿Desea eliminar otro estudiante? (s/N): ");
     }
 }
 
 void subMenuEstudiantes() {
-    // Si no hay datos registrados, pasa directo a capturar la información
-    if (gestor.estaVacio()) {
-        ejecutarIngresoEstudiantes();
-        if (gestor.estaVacio()) return;
-    }
-
     int opcion;
     do {
-        if (!gestor.estaVacio()) {
-            gestor.mostrarTabla();
-        }
+        // Muestra el listado autonumÃ©rico siempre al inicio de la OpciÃ³n 1
+        gestor.mostrarTabla();
 
         cout << "\n--- SUBMENU ESTUDIANTES ---\n"
              << "1. Ingresar estudiante\n"
@@ -523,69 +469,69 @@ void subMenuEstudiantes() {
 }
 
 // ============================================================
-// GESTIÓN DE CALIFICACIONES
+// OPCIÃ“N 2: REGISTRO DE CALIFICACIONES
 // ============================================================
 
-void ejecutarAgregarNota(Estudiante* estudiante) {
-    if (estudiante->getNumNotas() >= estudiante->getMaxNotas()) {
-        cout << "Se han ingresado todas las calificaciones posibles.\n";
+void ejecutarAgregarNota(Estudiante* est) {
+    if (est->getNumNotas() >= est->getMaxNotas()) {
+        cout << "\nSe han ingresado todas las calificaciones posibles.\n";
         return;
     }
 
     bool continuar = true;
     while (continuar) {
         double nota = leerDouble("Ingrese nota (0.0-10.0): ", 0.0, 10.0);
-        estudiante->agregarNota(nota);
+        est->agregarNota(nota);
 
-        cout << "Nota registrada.\n" << estudiante->notasToString() << endl;
+        cout << "Nota registrada.\n" << est->notasToString() << endl;
 
-        if (estudiante->getNumNotas() >= estudiante->getMaxNotas()) {
-            cout << "Se han ingresado todas las calificaciones posibles.\n";
+        if (est->getNumNotas() >= est->getMaxNotas()) {
+            cout << "\nSe han ingresado todas las calificaciones posibles.\n";
             break;
         }
 
-        continuar = solicitarConfirmacion("¿Desea agregar otra nota? (s/N): ");
+        continuar = solicitarConfirmacion("Â¿Desea agregar otra nota? (s/N): ");
     }
 }
 
-void ejecutarModificarNota(Estudiante* estudiante) {
-    if (estudiante->getNumNotas() == 0) {
+void ejecutarModificarNota(Estudiante* est) {
+    if (est->getNumNotas() == 0) {
         cout << "No hay notas registradas.\n";
         return;
     }
 
-    cout << "\nNotas actuales: " << estudiante->notasToString() << endl;
-    int posicion = leerEntero("Indice de nota a modificar (1-" + to_string(estudiante->getNumNotas()) + "): ") - 1;
+    cout << "\nNotas actuales: " << est->notasToString() << endl;
+    int pos = leerEntero("Indice de nota a modificar (1-" + to_string(est->getNumNotas()) + "): ") - 1;
 
-    if (posicion < 0 || posicion >= estudiante->getNumNotas()) {
+    if (pos < 0 || pos >= est->getNumNotas()) {
         cout << "Error: Indice fuera de rango.\n";
         return;
     }
 
-    cout << fixed << setprecision(1) << "Nota actual: " << estudiante->getNota(posicion) << endl;
+    cout << fixed << setprecision(1) << "Nota actual: " << est->getNota(pos) << endl;
     double nuevaNota = leerDouble("Nueva nota (0.0-10.0): ", 0.0, 10.0);
 
-    estudiante->modificarNota(posicion, nuevaNota);
-    cout << "Nota actualizada.\n" << estudiante->notasToString() << endl;
+    est->modificarNota(pos, nuevaNota);
+    cout << "Nota actualizada.\n" << est->notasToString() << endl;
 }
 
-void ejecutarEliminarNota(Estudiante* estudiante) {
-    if (estudiante->getNumNotas() == 0) {
+void ejecutarEliminarNota(Estudiante* est) {
+    if (est->getNumNotas() == 0) {
         cout << "No hay notas registradas.\n";
         return;
     }
 
-    cout << "\nNotas actuales: " << estudiante->notasToString() << endl;
-    int posicion = leerEntero("Indice de nota a eliminar (1-" + to_string(estudiante->getNumNotas()) + "): ") - 1;
+    cout << "\nNotas actuales: " << est->notasToString() << endl;
+    int pos = leerEntero("Indice de nota a eliminar (1-" + to_string(est->getNumNotas()) + "): ") - 1;
 
-    if (posicion < 0 || posicion >= estudiante->getNumNotas()) {
+    if (pos < 0 || pos >= est->getNumNotas()) {
         cout << "Error: Indice fuera de rango.\n";
         return;
     }
 
-    if (solicitarConfirmacion("¿Eliminar calificacion? (s/N): ")) {
-        estudiante->eliminarNota(posicion);
-        cout << "Nota eliminada.\n" << estudiante->notasToString() << endl;
+    if (solicitarConfirmacion("Â¿Eliminar calificacion? (s/N): ")) {
+        est->eliminarNota(pos);
+        cout << "Nota eliminada.\n" << est->notasToString() << endl;
     } else {
         cout << "Operacion cancelada.\n";
     }
@@ -597,38 +543,38 @@ void subMenuCalificaciones() {
         return;
     }
 
-    Estudiante* estudiante = nullptr;
-    while (estudiante == nullptr) {
-        string cedula = leerCedulaValida("Ingrese la cedula del estudiante: ");
-        estudiante = gestor.buscarPorCedula(cedula);
+    Estudiante* est = nullptr;
+    while (est == nullptr) {
+        string cedula = leerCedulaValida("Ingrese el numero de cedula del estudiante: ");
+        est = gestor.buscar(cedula);
 
-        if (estudiante == nullptr) {
-            cout << "Error: Estudiante no encontrado.\n";
-            if (!solicitarConfirmacion("¿Desea intentar con otra cedula? (s/N): ")) return;
+        if (est == nullptr) {
+            cout << "\nNotificacion: La cedula ingresada no pertenece a un estudiante registrado.\n";
+            if (!solicitarConfirmacion("Â¿Desea ingresar otro numero de cedula? (s/N): ")) return;
         }
     }
 
-    cout << "\nEstudiante encontrado:\n"
-         << "Nombres: " << estudiante->getNombres() << "\n"
-         << "Apellidos: " << estudiante->getApellidos() << "\n"
-         << "Edad: " << estudiante->calcularEdad() << " anios\n";
+    cout << "\n--- DATOS DEL ESTUDIANTE ---\n"
+         << "Nombres: " << est->getNombres() << "\n"
+         << "Apellidos: " << est->getApellidos() << "\n"
+         << "Edad: " << est->calcularEdad() << " anios\n";
 
     int opcion;
     do {
         cout << "\n--- CALIFICACIONES DE ESTUDIANTE ---\n"
-             << "Notas (" << estudiante->getNumNotas() << "/" << estudiante->getMaxNotas() << "): "
-             << estudiante->notasToString() << "\n"
+             << "Notas (" << est->getNumNotas() << "/" << est->getMaxNotas() << "): "
+             << est->notasToString() << "\n"
              << "1. Agregar nota\n"
              << "2. Modificar nota\n"
              << "3. Eliminar nota\n"
-             << "0. Volver\n";
+             << "0. Volver al menu principal\n";
 
         opcion = leerEntero("Seleccione una opcion: ");
 
         switch (opcion) {
-            case 1: ejecutarAgregarNota(estudiante); break;
-            case 2: ejecutarModificarNota(estudiante); break;
-            case 3: ejecutarEliminarNota(estudiante); break;
+            case 1: ejecutarAgregarNota(est); break;
+            case 2: ejecutarModificarNota(est); break;
+            case 3: ejecutarEliminarNota(est); break;
             case 0: break;
             default: cout << "Opcion no valida.\n";
         }
@@ -636,83 +582,71 @@ void subMenuCalificaciones() {
 }
 
 // ============================================================
-// CONSULTAS
+// OPCIÃ“N 3 Y 4: CONSULTAS DE PROMEDIO
 // ============================================================
 
 void mostrarPromedioEstudiante() {
     if (gestor.estaVacio()) {
-        cout << "\nNo hay estudiantes registrados.\n";
+        cout << "\nError: No se encontro un estudiante con el numero de cedula indicado (Lista vacia).\n";
         return;
     }
 
-    string cedula = leerCedulaValida("Ingrese la cedula del estudiante: ");
-    Estudiante* estudiante = gestor.buscarPorCedula(cedula);
+    string cedula = leerCedulaValida("Ingrese el numero de cedula del estudiante: ");
+    Estudiante* est = gestor.buscar(cedula);
 
-    if (estudiante == nullptr) {
-        cout << "Error: No se encontro un estudiante con la cedula indicada.\n";
+    if (est == nullptr) {
+        cout << "\nError: No se encontro un estudiante con el numero de cedula indicado.\n";
         return;
     }
 
     cout << "\n--- DATOS DEL ESTUDIANTE ---\n"
-         << "Nombres: " << estudiante->getNombres() << "\n"
-         << "Apellidos: " << estudiante->getApellidos() << "\n"
-         << "Edad: " << estudiante->calcularEdad() << " anios\n"
+         << "Nombres: " << est->getNombres() << "\n"
+         << "Apellidos: " << est->getApellidos() << "\n"
+         << "Edad: " << est->calcularEdad() << " anios\n"
          << fixed << setprecision(2)
-         << "Promedio de calificaciones: " << estudiante->calcularPromedio() << endl;
+         << "Promedio de calificaciones: " << est->calcularPromedio() << endl;
 }
 
 void mostrarPromedioCurso() {
-    cout << "\n--- PROMEDIO DEL CURSO ---\n";
+    cout << "\n--- PROMEDIO GENERAL DEL CURSO ---\n";
     if (!gestor.tieneNotasRegistradas()) {
         cout << "No se han registrado calificaciones de estudiantes.\n";
         return;
     }
 
     cout << fixed << setprecision(2)
-         << "Promedio general del curso: " << gestor.calcularPromedioGeneral() << endl;
+         << "Promedio general de calificaciones: " << gestor.calcularPromedioGeneral() << endl;
 }
 
 // ============================================================
-// MENÚ PRINCIPAL
+// MENÃš PRINCIPAL
 // ============================================================
 
 void mostrarMenuPrincipal() {
-    cout << "\n==========================================\n"
-         << "=== GESTOR DE PERSONAS ===\n"
-         << "==========================================\n"
+    cout << "\n=== GESTOR DE PERSONAS ===\n"
          << "1.- Estudiantes.\n"
          << "2.- Registro de calificaciones.\n"
          << "3.- Determinar el promedio de notas de un estudiante.\n"
          << "4.- Determinar el promedio de notas del curso.\n"
-         << "0.- Salir.\n"
-         << "==========================================\n";
-}
-
-void procesarOpcionPrincipal(int opcion) {
-    switch (opcion) {
-        case 1: subMenuEstudiantes(); break;
-        case 2: subMenuCalificaciones(); break;
-        case 3: mostrarPromedioEstudiante(); break;
-        case 4: mostrarPromedioCurso(); break;
-        case 0: break;
-        default: cout << "Opcion no valida.\n";
-    }
+         << "0.- Salir.\n";
 }
 
 int main() {
-    cout << "==========================================\n"
-         << "     GESTOR DE ESTUDIANTES\n"
-         << "     Cupo maximo: 20 estudiantes\n"
-         << "     Maximo notas por estudiante: 7\n"
-         << "==========================================\n";
-
     int opcion;
     do {
         mostrarMenuPrincipal();
-        opcion = leerEntero("Teclee su opcion (0-4): ");
-        procesarOpcionPrincipal(opcion);
+        opcion = leerEntero("Teclee su opcion (1-4): ");
+
+        switch (opcion) {
+            case 1: subMenuEstudiantes(); break;
+            case 2: subMenuCalificaciones(); break;
+            case 3: mostrarPromedioEstudiante(); break;
+            case 4: mostrarPromedioCurso(); break;
+            case 0: break;
+            default: cout << "Opcion no valida.\n";
+        }
     } while (opcion != 0);
 
-    cout << "\n¡Gracias por usar el sistema!\n";
+    cout << "\nPrograma finalizado.\n";
     return 0;
 }
