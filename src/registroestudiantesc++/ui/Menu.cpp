@@ -1,248 +1,216 @@
 #include "Menu.hpp"
-#include <iostream>
-#include <algorithm>
+#include "../model/Estudiante.hpp"
+#include <iomanip>
+#include <limits>
+#include <stdexcept>
 
-Menu::Menu(RegistroEstudiantes& reg) : registro(reg) {}
+Menu::Menu(std::istream& input, std::ostream& output, RegistroEstudiantes& registro)
+    : input(input), output(output), registro(registro) {}
 
 void Menu::mostrar() const {
-    std::cout << "\n======================================================================\n";
-    std::cout << "SISTEMA DE REGISTRO DE ESTUDIANTES (TDA ESTATICO - C++)\n";
-    std::cout << "Capacidad: " << registro.getCapacidad() << " estudiantes\n";
-    std::cout << "======================================================================\n";
-    std::cout << "1. Registrar estudiante\n";
-    std::cout << "2. Listar estudiantes\n";
-    std::cout << "3. Buscar estudiante por ID\n";
-    std::cout << "4. Modificar estudiante\n";
-    std::cout << "5. Eliminar estudiante\n";
-    std::cout << "6. Verificar integridad del arreglo\n";
-    std::cout << "0. Salir\n";
-    std::cout << "======================================================================\n";
-    std::cout << "Seleccione una opcion: ";
+    output << "\n" << std::string(80, '=') << std::endl;
+    output << "SISTEMA DE REGISTRO DE ESTUDIANTES - CURSO 3B" << std::endl;
+    output << "Capacidad: " << registro.getCapacidad() << " estudiantes" << std::endl;
+    output << std::string(80, '=') << std::endl;
+    output << "1. Registrar estudiante" << std::endl;
+    output << "2. Listar estudiantes" << std::endl;
+    output << "3. Buscar estudiante por ID" << std::endl;
+    output << "4. Modificar estudiante" << std::endl;
+    output << "5. Eliminar estudiante" << std::endl;
+    output << "6. Verificar integridad del arreglo" << std::endl;
+    output << "0. Salir" << std::endl;
+    output << std::string(80, '=') << std::endl;
+    output << "Seleccione una opcion: ";
 }
 
 void Menu::registrar() {
     if (registro.estaLleno()) {
-        std::cout << "Error: Capacidad maxima alcanzada (" << registro.getCapacidad() << ").\n";
+        output << "Error: Capacidad maxima alcanzada." << std::endl;
         return;
     }
-
-    std::cout << "\n--- REGISTRAR ESTUDIANTE ---\n";
-    long id = leerLong("ID (8-10 digitos): ");
-
-    if (registro.buscarPorId(id) != nullptr) {
-        std::cout << "Error: El ID " << id << " ya esta registrado.\n";
-        return;
-    }
-
-    std::string nombre = leerTexto("Nombre completo: ");
-    int edad = leerEnteroRango("Edad (15-100): ", 15, 100);
-    double promedio = leerDoubleRango("Promedio (0.0-10.0): ", 0.0, 10.0);
-
+    output << "\n--- REGISTRAR ESTUDIANTE ---" << std::endl;
     try {
-        Estudiante nuevo(id, nombre, edad, promedio);
-        if (registro.registrar(nuevo)) {
-            std::cout << "Estudiante registrado exitosamente.\n";
-            std::cout << "Total: " << registro.getCantidad() << "/" << registro.getCapacidad() << "\n";
+        long long id = leerLong("ID (8-10 digitos): ");
+        if (registro.buscarPorId(id) != nullptr) {
+            output << "Error: ID ya registrado." << std::endl;
+            return;
         }
+        std::string nombre = leerString("Nombre: ");
+        int edad = leerInt("Edad (15-100): ", 15, 100);
+        double promedio = leerDouble("Promedio (0.0-10.0): ", 0.0, 10.0);
+        Estudiante* nuevo = new Estudiante(id, nombre, edad, promedio);
+        registro.registrar(nuevo);
     } catch (const std::invalid_argument& e) {
-        std::cout << "Error: " << e.what() << "\n";
+        output << "Error: " << e.what() << std::endl;
     }
 }
 
 void Menu::listar() const {
-    if (registro.estaVacio()) {
-        std::cout << "El registro esta vacio.\n";
-        return;
-    }
-
-    std::cout << "\n======================================================================\n";
-    std::cout << "LISTADO DE ESTUDIANTES (" << registro.getCantidad() << "/" << registro.getCapacidad() << ")\n";
-    std::cout << "======================================================================\n";
-
-    auto lista = registro.obtenerTodos();
-    for (size_t i = 0; i < lista.size(); ++i) {
-        std::cout << (i + 1) << ". " << lista[i].toString() << "\n";
-    }
-    std::cout << "======================================================================\n";
+    registro.listarTodos();
 }
 
 void Menu::buscar() const {
     if (registro.estaVacio()) {
-        std::cout << "El registro esta vacio.\n";
+        output << "El registro esta vacio." << std::endl;
         return;
     }
-
-    long id = const_cast<Menu*>(this)->leerLong("Ingrese el ID a buscar: ");
-    const Estudiante* est = registro.buscarPorId(id);
-
+    long long id = leerLong("ID a buscar: ");
+    Estudiante* est = registro.buscarPorId(id);
     if (est != nullptr) {
-        std::cout << "\nEstudiante encontrado:\n" << est->toString() << "\n";
+        output << "Estudiante encontrado:" << std::endl;
+        output << *est << std::endl;
     } else {
-        std::cout << "No se encontro estudiante con el ID " << id << "\n";
+        output << "No encontrado." << std::endl;
     }
 }
 
 void Menu::modificar() {
     if (registro.estaVacio()) {
-        std::cout << "El registro esta vacio.\n";
+        output << "El registro esta vacio." << std::endl;
         return;
     }
-
-    long id = leerLong("Ingrese el ID del estudiante a modificar: ");
-    const Estudiante* est = registro.buscarPorId(id);
-
+    long long id = leerLong("ID a modificar: ");
+    Estudiante* est = registro.buscarPorId(id);
     if (est == nullptr) {
-        std::cout << "No existe estudiante con el ID " << id << "\n";
+        output << "No encontrado." << std::endl;
         return;
     }
-
-    std::cout << "\nDatos actuales:\n" << est->toString() << "\n";
-    std::cout << "\nIngrese los nuevos datos (Enter para mantener el valor actual):\n";
-
-    std::string nombre = leerTextoOpcional("Nuevo nombre: ", est->getNombre());
-    int edad = leerEnteroOpcional("Nueva edad (15-100): ", est->getEdad(), 15, 100);
+    output << "Datos actuales: " << *est << std::endl;
+    output << "\nIngrese nuevos datos (Enter para mantener):" << std::endl;
+    std::string nombre = leerStringOpcional("Nuevo nombre: ", est->getNombre());
+    int edad = leerIntOpcional("Nueva edad (15-100): ", est->getEdad(), 15, 100);
     double promedio = leerDoubleOpcional("Nuevo promedio (0.0-10.0): ", est->getPromedio(), 0.0, 10.0);
-
-    try {
-        if (registro.modificar(id, nombre, edad, promedio)) {
-            std::cout << "Estudiante modificado con exito.\nDatos actualizados:\n";
-            std::cout << registro.buscarPorId(id)->toString() << "\n";
-        }
-    } catch (const std::invalid_argument& e) {
-        std::cout << "Error en la modificacion: " << e.what() << "\n";
-        std::cout << "Los datos no han sido modificados.\n";
-    }
+    registro.modificar(id, nombre, edad, promedio);
 }
 
 void Menu::eliminar() {
     if (registro.estaVacio()) {
-        std::cout << "El registro esta vacio.\n";
+        output << "El registro esta vacio." << std::endl;
         return;
     }
-
-    long id = leerLong("Ingrese el ID del estudiante a eliminar: ");
-    const Estudiante* est = registro.buscarPorId(id);
-
+    long long id = leerLong("ID a eliminar: ");
+    Estudiante* est = registro.buscarPorId(id);
     if (est == nullptr) {
-        std::cout << "No existe estudiante con el ID " << id << "\n";
+        output << "No encontrado." << std::endl;
         return;
     }
-
-    std::cout << "\nEstudiante a eliminar:\n" << est->toString() << "\n";
-    std::cout << "Confirmar eliminacion? (s/N): ";
-
+    output << "Estudiante a eliminar: " << *est << std::endl;
+    output << "Confirmar (s/N): ";
     std::string confirm;
-    std::getline(std::cin, confirm);
-    std::transform(confirm.begin(), confirm.end(), confirm.begin(), ::tolower);
-
+    std::getline(input, confirm);
     if (confirm == "s" || confirm == "si") {
-        if (registro.eliminar(id)) {
-            std::cout << "Estudiante eliminado correctamente.\n";
-            std::cout << "Total restante: " << registro.getCantidad() << "/" << registro.getCapacidad() << "\n";
-        }
+        registro.eliminar(id);
     } else {
-        std::cout << "Operacion cancelada.\n";
+        output << "Operacion cancelada." << std::endl;
     }
 }
 
 void Menu::verificar() const {
-    if (registro.verificarIntegridad()) {
-        std::cout << "El arreglo es contiguo y no tiene espacios intermedios.\n";
-    } else {
-        std::cout << "Atencion: Existen espacios nulos intercalados.\n";
-    }
+    registro.verificarIntegridad();
 }
 
-std::string Menu::leerTexto(const std::string& mensaje) {
-    std::string input;
+std::string Menu::leerString(const std::string& mensaje) {
     while (true) {
-        std::cout << mensaje;
-        std::getline(std::cin, input);
+        output << mensaje;
+        std::string input;
+        std::getline(this->input, input);
         if (!input.empty()) return input;
-        std::cout << "El campo no puede estar vacio.\n";
+        output << "El campo no puede estar vacio." << std::endl;
     }
 }
 
-std::string Menu::leerTextoOpcional(const std::string& mensaje, const std::string& actual) {
-    std::cout << mensaje;
+std::string Menu::leerStringOpcional(const std::string& mensaje, const std::string& actual) {
+    output << mensaje;
     std::string input;
-    std::getline(std::cin, input);
+    std::getline(this->input, input);
     return input.empty() ? actual : input;
 }
 
-int Menu::leerEnteroRango(const std::string& mensaje, int min, int max) {
-    std::string input;
+long long Menu::leerLong(const std::string& mensaje) {
     while (true) {
-        std::cout << mensaje;
-        std::getline(std::cin, input);
         try {
-            int valor = std::stoi(input);
-            if (valor >= min && valor <= max) return valor;
-            std::cout << "El valor debe estar entre " << min << " y " << max << ".\n";
-        } catch (...) {
-            std::cout << "Debe ingresar un numero entero valido.\n";
+            output << mensaje;
+            std::string input;
+            std::getline(this->input, input);
+            if (input.empty()) {
+                output << "El ID no puede estar vacio." << std::endl;
+                continue;
+            }
+            long long valor = std::stoll(input);
+            if (valor >= 10000000LL && valor <= 9999999999LL) return valor;
+            output << "El ID debe tener entre 8 y 10 digitos." << std::endl;
+        } catch (const std::exception&) {
+            output << "Debe ingresar un numero valido." << std::endl;
         }
     }
 }
 
-int Menu::leerEnteroOpcional(const std::string& mensaje, int actual, int min, int max) {
-    std::string input;
+int Menu::leerInt(const std::string& mensaje, int min, int max) {
     while (true) {
-        std::cout << mensaje;
-        std::getline(std::cin, input);
+        try {
+            output << mensaje;
+            std::string input;
+            std::getline(this->input, input);
+            if (input.empty()) {
+                output << "El campo no puede estar vacio." << std::endl;
+                continue;
+            }
+            int valor = std::stoi(input);
+            if (valor >= min && valor <= max) return valor;
+            output << "El valor debe estar entre " << min << " y " << max << "." << std::endl;
+        } catch (const std::exception&) {
+            output << "Debe ingresar un numero entero." << std::endl;
+        }
+    }
+}
+
+int Menu::leerIntOpcional(const std::string& mensaje, int actual, int min, int max) {
+    while (true) {
+        output << mensaje;
+        std::string input;
+        std::getline(this->input, input);
         if (input.empty()) return actual;
         try {
             int valor = std::stoi(input);
             if (valor >= min && valor <= max) return valor;
-            std::cout << "El valor debe estar entre " << min << " y " << max << ".\n";
-        } catch (...) {
-            std::cout << "Debe ingresar un numero entero valido.\n";
+            output << "El valor debe estar entre " << min << " y " << max << "." << std::endl;
+        } catch (const std::exception&) {
+            output << "Debe ingresar un numero entero." << std::endl;
         }
     }
 }
 
-long Menu::leerLong(const std::string& mensaje) {
-    std::string input;
+double Menu::leerDouble(const std::string& mensaje, double min, double max) {
     while (true) {
-        std::cout << mensaje;
-        std::getline(std::cin, input);
         try {
-            long valor = std::stol(input);
-            if (valor >= 10000000L && valor <= 9999999999L) return valor;
-            std::cout << "El ID debe tener entre 8 y 10 digitos.\n";
-        } catch (...) {
-            std::cout << "Debe ingresar un numero valido.\n";
-        }
-    }
-}
-
-double Menu::leerDoubleRango(const std::string& mensaje, double min, double max) {
-    std::string input;
-    while (true) {
-        std::cout << mensaje;
-        std::getline(std::cin, input);
-        try {
+            output << mensaje;
+            std::string input;
+            std::getline(this->input, input);
+            if (input.empty()) {
+                output << "El campo no puede estar vacio." << std::endl;
+                continue;
+            }
             double valor = std::stod(input);
             if (valor >= min && valor <= max) return valor;
-            std::cout << "El valor debe estar entre " << min << " y " << max << ".\n";
-        } catch (...) {
-            std::cout << "Debe ingresar un numero decimal valido.\n";
+            output << "El valor debe estar entre " << min << " y " << max << "." << std::endl;
+        } catch (const std::exception&) {
+            output << "Debe ingresar un numero decimal." << std::endl;
         }
     }
 }
 
 double Menu::leerDoubleOpcional(const std::string& mensaje, double actual, double min, double max) {
-    std::string input;
     while (true) {
-        std::cout << mensaje;
-        std::getline(std::cin, input);
+        output << mensaje;
+        std::string input;
+        std::getline(this->input, input);
         if (input.empty()) return actual;
         try {
             double valor = std::stod(input);
             if (valor >= min && valor <= max) return valor;
-            std::cout << "El valor debe estar entre " << min << " y " << max << ".\n";
-        } catch (...) {
-            std::cout << "Debe ingresar un numero decimal valido.\n";
+            output << "El valor debe estar entre " << min << " y " << max << "." << std::endl;
+        } catch (const std::exception&) {
+            output << "Debe ingresar un numero decimal." << std::endl;
         }
     }
 }

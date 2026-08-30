@@ -1,30 +1,31 @@
-#ifndef REGISTROESTUDIANTES_HPP
-#define REGISTROESTUDIANTES_HPP
+#ifndef REGISTRO_ESTUDIANTES_HPP
+#define REGISTRO_ESTUDIANTES_HPP
 
-#include "Estudiante.hpp"
-#include <vector>
+#include "../model/Estudiante.hpp"
 
 class RegistroEstudiantes {
 private:
-    static const int CAPACIDAD = 26; // Cambiado a 26
-    Estudiante estudiantes[CAPACIDAD];
+    static const int CAPACIDAD = 30;
+    Estudiante* estudiantes[CAPACIDAD];
     int cantidad;
 
-    int buscarIndicePorId(long id) const;
+    int buscarIndicePorId(long long id) const;
 
 public:
     RegistroEstudiantes();
+    ~RegistroEstudiantes();
 
-    bool estaVacio() const;
-    bool estaLleno() const;
-    int getCantidad() const;
-    int getCapacidad() const;
+    bool estaVacio() const { return cantidad == 0; }
+    bool estaLleno() const { return cantidad >= CAPACIDAD; }
+    int getCantidad() const { return cantidad; }
+    int getCapacidad() const { return CAPACIDAD; }
 
-    const Estudiante* buscarPorId(long id) const;
-    bool registrar(const Estudiante& estudiante);
-    std::vector<Estudiante> obtenerTodos() const;
-    bool modificar(long id, const std::string& nuevoNombre, int nuevaEdad, double nuevoPromedio);
-    bool eliminar(long id);
+    Estudiante* buscarPorId(long long id) const;
+    bool registrar(Estudiante* estudiante);
+    void listarTodos() const;
+    Estudiante** obtenerTodos() const;
+    bool modificar(long long id, const std::string& nuevoNombre, int nuevaEdad, double nuevoPromedio);
+    bool eliminar(long long id);
     bool verificarIntegridad() const;
 };
 

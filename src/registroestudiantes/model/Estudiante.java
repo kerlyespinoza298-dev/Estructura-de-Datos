@@ -8,11 +8,14 @@ public class Estudiante {
 
     public Estudiante(long id, String nombre, int edad, double promedio) {
         validarId(id);
+        validarNombre(nombre);
+        validarEdad(edad);
+        validarPromedio(promedio);
+        
         this.id = id;
         this.nombre = nombre.trim();
         this.edad = edad;
         this.promedio = promedio;
-        validarEstadoCompleto();
     }
 
     public long getId() { return id; }
@@ -44,15 +47,9 @@ public class Estudiante {
         this.promedio = promedio;
     }
 
-    private void validarEstadoCompleto() {
-        validarNombre(this.nombre);
-        validarEdad(this.edad);
-        validarPromedio(this.promedio);
-    }
-
     private static void validarId(long id) {
         if (id < 10000000L || id > 9999999999L) {
-            throw new IllegalArgumentException("El ID debe contener entre 8 y 10 digitos.");
+            throw new IllegalArgumentException("El ID debe tener entre 8 y 10 digitos.");
         }
     }
 
