@@ -1,0 +1,120 @@
+import java.util.Scanner;
+
+abstract class Vehiculo {
+
+    protected String placa;
+    protected String marca;
+    protected String modelo;
+    protected int anio;
+    protected double precio;
+    protected boolean disponible;
+
+    public Vehiculo(String placa, String marca, String modelo,
+                     int anio, double precio, boolean disponible) {
+
+        if (anio < 1886 || anio > 2100) {
+            throw new IllegalArgumentException("El año debe estar entre 1886 y 2100.");
+        }
+        if (precio < 0) {
+            throw new IllegalArgumentException("El precio no puede ser negativo.");
+        }
+
+        this.placa = placa;
+        this.marca = marca;
+        this.modelo = modelo;
+        this.anio = anio;
+        this.precio = precio;
+        this.disponible = disponible;
+    }
+
+    public String getPlaca() {
+        return placa;
+    }
+
+    public double getPrecio() {
+        return precio;
+    }
+
+    public boolean isDisponible() {
+        return disponible;
+    }
+
+    public void setPrecio(double precio) {
+        if (precio < 0) {
+            throw new IllegalArgumentException("El precio no puede ser negativo.");
+        }
+        this.precio = precio;
+    }
+
+    public void setDisponible(boolean disponible) {
+        this.disponible = disponible;
+    }
+
+    protected void mostrarDatosComunes() {
+        System.out.println("  Placa      : " + placa);
+        System.out.println("  Marca      : " + marca);
+        System.out.println("  Modelo     : " + modelo);
+        System.out.println("  Año        : " + anio);
+        System.out.println("  Precio     : $" + precio);
+        System.out.println("  Disponible : " + (disponible ? "Sí" : "No"));
+    }
+
+    public abstract void mostrarInformacion();
+}
+
+class Automovil extends Vehiculo {
+
+    private int numeroPuertas;
+    private boolean electrico;
+
+    public Automovil(String placa, String marca, String modelo, int anio,
+                      double precio, boolean disponible,
+                      int numeroPuertas, boolean electrico) {
+
+        super(placa, marca, modelo, anio, precio, disponible);
+
+        if (numeroPuertas < 2 || numeroPuertas > 6) {
+            throw new IllegalArgumentException("Un automóvil debe tener entre 2 y 6 puertas.");
+        }
+
+        this.numeroPuertas = numeroPuertas;
+        this.electrico = electrico;
+    }
+
+    @Override
+    public void mostrarInformacion() {
+        System.out.println("Tipo: Automóvil");
+        mostrarDatosComunes();
+        System.out.println("  Puertas    : " + numeroPuertas);
+        System.out.println("  Eléctrico  : " + (electrico ? "Sí" : "No"));
+    }
+}
+
+class Motocicleta extends Vehiculo {
+
+    private int cilindrada;
+    private boolean tieneMaletero;
+
+    public Motocicleta(String placa, String marca, String modelo, int anio,
+                        double precio, boolean disponible,
+                        int cilindrada, boolean tieneMaletero) {
+
+        super(placa, marca, modelo, anio, precio, disponible);
+
+        if (cilindrada < 50 || cilindrada > 2500) {
+            throw new IllegalArgumentException("La cilindrada debe estar entre 50 y 2500 cc.");
+        }
+
+        this.cilindrada = cilindrada;
+        this.tieneMaletero = tieneMaletero;
+    }
+
+    @Override
+    public void mostrarInformacion() {
+        System.out.println("Tipo: Motocicleta");
+        mostrarDatosComunes();
+        System.out.println("  Cilindrada : " + cilindrada + " cc");
+        System.out.println("  Maletero   : " + (tieneMaletero ? "Sí" : "No"));
+    }
+}
+

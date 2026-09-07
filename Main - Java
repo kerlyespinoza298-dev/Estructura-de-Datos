@@ -1,0 +1,130 @@
+// ============================================================
+// Main: menu interactivo por consola (Paso 1 de la metodologia: Scanner)
+// ============================================================
+public class Main {
+    private static final Scanner scanner = new Scanner(System.in);
+    private static final RegistroSimulacion registro = new RegistroSimulacion();
+    private static final Objeto objetoCompartido = new Objeto("manija de la puerta");
+
+    public static void main(String[] args) {
+        int opcion = 0;
+        do {
+            System.out.println("\n=== TDA CORONAVIRUS: CADENA DE CONTAGIO ===");
+            System.out.println("1. Registrar persona cuidadosa");
+            System.out.println("2. Registrar persona descuidada");
+            System.out.println("3. Persona infectada contamina el objeto");
+            System.out.println("4. Otra persona toca el objeto");
+            System.out.println("5. Simular que todos se tocan el rostro (Polimorfismo)");
+            System.out.println("6. Mostrar estado del registro");
+            System.out.println("7. Salir");
+            System.out.print("Seleccione una opción: ");
+
+            try {
+                opcion = Integer.parseInt(scanner.nextLine());
+            } catch (NumberFormatException e) {
+                opcion = 0;
+            }
+
+            switch (opcion) {
+                case 1 -> registrarPersona(true);
+                case 2 -> registrarPersona(false);
+                case 3 -> contaminarObjeto();
+                case 4 -> tocarObjeto();
+                case 5 -> registro.simularContactoConRostro();
+                case 6 -> registro.mostrarEstado();
+                case 7 -> System.out.println("Saliendo del programa...");
+                default -> System.out.println("Opción inválida. Intente de nuevo.");
+            }
+        } while (opcion != 7);
+    }
+
+    // DRY: un solo metodo central para registrar cualquier tipo de persona
+    private static void registrarPersona(boolean esCuidadosa) {
+        if (registro.estaLleno()) {
+            System.out.println("Error: el registro estático está lleno.");
+            return;
+        }
+
+        System.out.println(esCuidadosa ? "\n--- REGISTRO DE PERSONA CUIDADOSA ---" : "\n--- REGISTRO DE PERSONA DESCUIDADA ---");
+        String nombre = leerNombreUnico();
+        boolean infectada = leerBoolean("¿Está infectada? (s/n): ");
+
+        Persona nueva;
+        if (esCuidadosa) {
+            boolean usaMascarilla = leerBoolean("¿Usa mascarilla? (s/n): ");
+            boolean usaAlcohol = leerBoolean("¿Usa alcohol/gel para desinfectarse? (s/n): ");
+            nueva = new PersonaCuidadosa(nombre, infectada, usaMascarilla, usaAlcohol); // CONCEPTO: instanciación
+        } else {
+            int frecuencia = leerRangoInt("Frecuencia con que se toca el rostro por hora (1 - 30): ", 1, 30);
+            boolean ignoraSintomas = leerBoolean("¿Ignora los síntomas? (s/n): ");
+            nueva = new PersonaDescuidada(nombre, infectada, frecuencia, ignoraSintomas); // CONCEPTO: instanciación
+        }
+
+        if (registro.registrar(nueva)) {
+            System.out.println("Persona registrada con éxito.");
+        }
+    }
+
+    private static void contaminarObjeto() {
+        System.out.print("Nombre de la persona infectada que toca el objeto: ");
+        Persona p = registro.buscarPorNombre(scanner.nextLine().trim());
+        if (p == null) {
+            System.out.println("Esa persona no está registrada.");
+            return;
+        }
+        objetoCompartido.contaminar(p);
+        System.out.println(p.isInfectada()
+                ? "El objeto (" + objetoCompartido.getNombre() + ") quedó contaminado."
+                : p.getNombre() + " no está infectada; el objeto no se contaminó.");
+    }
+
+    private static void tocarObjeto() {
+        System.out.print("Nombre de la persona que toca el objeto: ");
+        Persona p = registro.buscarPorNombre(scanner.nextLine().trim());
+        if (p == null) {
+            System.out.println("Esa persona no está registrada.");
+            return;
+        }
+        p.tocarObjeto(objetoCompartido);
+        System.out.println(objetoCompartido.isContaminado()
+                ? "El virus pasó a las manos de " + p.getNombre() + "."
+                : "El objeto no estaba contaminado.");
+    }
+
+    private static String leerNombreUnico() {
+        while (true) {
+            System.out.print("Nombre: ");
+            String nombre = scanner.nextLine().trim();
+            if (nombre.isEmpty()) {
+                System.out.println("El nombre no puede estar vacío.");
+            } else if (registro.existeNombre(nombre)) {
+                System.out.println("Error: ya existe una persona registrada con el nombre '" + nombre + "'.");
+            } else {
+                return nombre;
+            }
+        }
+    }
+
+    private static int leerRangoInt(String mensaje, int min, int max) {
+        while (true) {
+            try {
+                System.out.print(mensaje);
+                int val = Integer.parseInt(scanner.nextLine());
+                if (val >= min && val <= max) return val;
+                System.out.println("El valor debe estar entre " + min + " y " + max + ".");
+            } catch (NumberFormatException e) {
+                System.out.println("Debe ingresar un número entero válido.");
+            }
+        }
+    }
+
+    private static boolean leerBoolean(String mensaje) {
+        while (true) {
+            System.out.print(mensaje);
+            String input = scanner.nextLine().trim().toLowerCase();
+            if (input.equals("s") || input.equals("si")) return true;
+            if (input.equals("n") || input.equals("no")) return false;
+            System.out.println("Ingrese 's' para Sí o 'n' para No.");
+        }
+    }
+}

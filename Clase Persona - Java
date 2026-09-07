@@ -1,0 +1,40 @@
+// CONCEPTO: Clase Abstracta y Encapsulamiento
+abstract class Persona {
+    protected String nombre;              // no primitivo
+    protected boolean infectada;          // CONCEPTO: dato primitivo boolean
+    protected boolean virusEnManos;       // CONCEPTO: dato primitivo boolean
+    protected int minutosVirusEnManos;    // CONCEPTO: dato primitivo int
+
+    public Persona(String nombre, boolean infectada) {
+        this.nombre = nombre;
+        this.infectada = infectada;
+        this.virusEnManos = false;
+        this.minutosVirusEnManos = 0;
+    }
+
+    public String getNombre() { return nombre; }
+    public boolean isInfectada() { return infectada; }
+    public boolean isVirusEnManos() { return virusEnManos; }
+
+    // CONCEPTO: conecta a Persona con Objeto -> pieza que faltaba en la version anterior
+    public void tocarObjeto(Objeto objeto) {
+        if (objeto.isContaminado()) {
+            this.virusEnManos = true;
+            this.minutosVirusEnManos = 30; // minutos que el virus sobrevive en las manos
+        }
+    }
+
+    protected void infectar() {
+        this.infectada = true;
+    }
+
+    // DRY: las subclases reutilizan la impresion de atributos comunes
+    protected void mostrarDatosComunes() {
+        System.out.printf("Nombre: %-10s | Infectada: %-3s | Virus en manos: %-3s",
+                nombre, (infectada ? "Sí" : "No"), (virusEnManos ? "Sí" : "No"));
+    }
+
+    // CONCEPTO: Polimorfismo (metodos abstractos)
+    public abstract void tocarseRostro();
+    public abstract void mostrarInformacion();
+}
